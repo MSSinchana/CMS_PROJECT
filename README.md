@@ -1,142 +1,152 @@
-# CMS Web App
+# GreenCode AI — AI for Sustainable Software
 
-A full-stack Content Management System rebuilt from the original Java CLI app into a browser-based application.
+GreenCode AI is a full-stack MVP that analyzes Python code for inefficient patterns, suggests optimized alternatives, benchmarks performance in a restricted environment, and estimates sustainability impact.
 
-## Stack
+Primary SDG: **SDG 12 — Responsible Consumption and Production**  
+Secondary SDGs: **SDG 9** and **SDG 13**.
 
-- Frontend: React, Vite, Tailwind CSS, React Router, Axios
-- Backend: Node.js, Express, JWT, bcrypt
-- Database: MySQL
+## Features
 
-## Prerequisites
+- Python static analysis using AST for:
+  - unnecessary nested loops
+  - repeated calculations
+  - inefficient string operations
+  - unnecessary sorting
+  - excessive object creation
+  - possible repeated database/API operations
+- Findings with severity and certainty (`actual` vs `possible`)
+- AI optimization via configurable LLM API
+- Rule-based fallback optimization if no AI key is configured
+- Safe benchmark endpoint (restricted subprocess + timeout + AST checks)
+- Measured execution time, CPU, and memory
+- **Estimated** energy and **estimated** CO₂ with documented assumptions
+- Green Score (0–100)
+- Project-based history and dashboard metrics
+- Dockerized frontend, backend, and PostgreSQL
 
-- Node.js 18+
-- MySQL 8+
+## Tech Stack
 
-## Project Layout
+- Frontend: React + Vite + JavaScript + CSS + Recharts
+- Backend: Python + FastAPI + SQLAlchemy
+- Database: PostgreSQL
 
-- `backend/` - Express API, database schema, seed script
-- `frontend/` - React/Vite app
-- `src/` - legacy Java CLI source from the original project
+## Architecture
 
-## Setup
+- `frontend/`: React app with pages for dashboard, analysis, results, optimization, benchmark, history, projects, and settings.
+- `backend/app/`: FastAPI app, services, DB models, and API routes.
+- `backend/tests/`: pytest tests for analyzer and core API.
+- `docker-compose.yml`: local orchestration for frontend, backend, and PostgreSQL.
 
-### 1. Create the database and seed data
+## Setup (Local)
 
-From the `backend/` folder:
+### 1) Backend
 
 ```bash
+cd /home/runner/work/CMS_PROJECT/CMS_PROJECT/backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+Update `DATABASE_URL` to your PostgreSQL connection string.
+
+Run API:
+
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### 2) Frontend
+
+```bash
+cd /home/runner/work/CMS_PROJECT/CMS_PROJECT/frontend
 npm install
-npm run seed
-```
-
-The seed script will:
-- create the `cms_database` database
-- create the tables if they do not already exist
-- ensure the default admin user exists
-- insert sample content only when the database is empty
-
-Note: the seed script is now non-destructive and will not delete existing users or posts.
-
-### 2. Configure backend environment
-
-The backend uses `backend/.env`:
-
-```env
-PORT=5000
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=
-DB_NAME=cms_database
-JWT_SECRET=your_super_secret_key_here
-JWT_EXPIRES_IN=24h
-FRONTEND_ORIGIN=http://localhost:5173
-```
-
-Update `DB_USER` and `DB_PASSWORD` if your MySQL account is different.
-
-### 3. Start the backend
-
-```bash
-cd backend
+cp .env.example .env
 npm run dev
 ```
 
-The API runs at `http://localhost:5000`.
+Frontend runs at `http://localhost:5173`.
 
-### 4. Start the frontend
-
-In another terminal:
+## Setup (Docker)
 
 ```bash
-cd frontend
-npm install
-npm run dev
+cd /home/runner/work/CMS_PROJECT/CMS_PROJECT
+docker compose up --build
 ```
 
-The app runs at `http://localhost:5173`.
-
-## Default Login
-
-- Username: `admin`
-- Password: `admin123`
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8000`
+- PostgreSQL: `localhost:5432`
 
 ## API Endpoints
 
-### Auth
+- `GET /api/health`
+- `POST /api/analyze`
+- `POST /api/optimize`
+- `POST /api/benchmark`
+- `POST /api/projects`
+- `GET /api/projects`
+- `GET /api/history/{project_id}`
+- `GET /api/dashboard/{project_id}`
 
-- `POST /api/auth/login` - public login, returns JWT + user info
-- `POST /api/auth/register` - public register, returns JWT + user info
-- `POST /api/auth/logout` - protected logout
-- `GET /api/auth/me` - protected current user
-- `PUT /api/auth/me/password` - protected change own password
-- `DELETE /api/auth/me` - protected delete own account
+## Benchmark & Safety
 
-### Content
+- Benchmarking requires code to define `target()`.
+- User code is parsed and validated against a restrictive AST policy.
+- Execution runs in a subprocess with CPU/memory/time limits.
+- Imports, dangerous builtins, and unsafe constructs are blocked.
 
-- `GET /api/content` - protected list with pagination, search, category, and status filters
-- `GET /api/content/stats` - protected dashboard stats
-- `GET /api/content/:id` - protected single content item
-- `POST /api/content` - protected create content using JWT user ID
-- `PUT /api/content/:id` - protected edit content (admin: any, user: own only)
-- `DELETE /api/content/:id` - protected delete content (admin: any, user: own only)
-- `PATCH /api/content/:id/status` - admin only change content status
+## Sustainability Assumptions
 
-### Users
+The app labels all sustainability values as estimates.
 
-- `GET /api/users` - admin only list users
-- `GET /api/users/people` - protected list of people (for social features)
-- `POST /api/users` - admin only create user
-- `PUT /api/users/:id` - admin only update user
-- `DELETE /api/users/:id` - admin only delete user
-- `POST /api/users/:id/follow` - protected follow a user
-- `DELETE /api/users/:id/follow` - protected unfollow a user
+- CPU model: power scales linearly with CPU utilization from `CPU_BASE_POWER_WATTS`
+- Memory model: `MEMORY_POWER_WATTS_PER_GB`
+- CO₂ factor: `GRID_EMISSION_FACTOR_G_PER_KWH`
 
-### Activity Log
+These assumptions are configurable through environment variables.
 
-- `GET /api/activity` - admin only paginated audit log, supports `?page`, `?limit`, `?action`, `?userId` filters
-- `GET /api/activity/recent` - admin only recent entries for the dashboard widget, supports `?limit`
+## Error Handling
 
-The following actions are recorded automatically:
+- Empty input and invalid Python syntax return safe errors.
+- Unsupported language returns 400.
+- Missing project/analysis/optimization returns 404 or 400.
+- Benchmark timeout returns 408.
+- AI failure falls back to rule-based recommendations.
 
-| Action | Trigger |
-|---|---|
-| `user.login` | Successful login |
-| `user.logout` | Logout |
-| `user.register` | New account registration |
-| `user.password_changed` | Password change |
-| `user.account_deleted` | User deletes own account |
-| `user.created` | Admin creates a user |
-| `user.updated` | Admin updates a user |
-| `user.deleted` | Admin deletes a user |
-| `content.created` | Content created |
-| `content.updated` | Content edited |
-| `content.deleted` | Content deleted |
-| `content.status_changed` | Admin changes content status |
+## Tests
 
-## Notes
+Backend tests:
 
-- Passwords are stored as bcrypt hashes only.
-- `created_by` is always taken from the JWT payload.
-- The frontend stores the JWT in `localStorage` and automatically sends it on API requests.
-- The old CLI files remain in `src/` as legacy source, but the browser app is now the primary interface.
+```bash
+cd /home/runner/work/CMS_PROJECT/CMS_PROJECT/backend
+pytest
+```
+
+Frontend build check:
+
+```bash
+cd /home/runner/work/CMS_PROJECT/CMS_PROJECT/frontend
+npm run build
+```
+
+## Limitations (MVP)
+
+- Supports Python only.
+- Benchmarking is intentionally restricted and not a full sandbox guarantee.
+- LLM integration expects OpenAI-style chat-completions payloads.
+- Green Score heuristic is configurable but simplified.
+
+## Security Considerations
+
+- No hardcoded API keys.
+- `.env`-based configuration with `.env.example` templates.
+- Restricted benchmark execution and bounded runtime resources.
+- CORS controlled by `FRONTEND_ORIGIN`.
+
+## SDG Alignment
+
+- **SDG 12**: encourages resource-efficient coding decisions.
+- **SDG 9**: improves software engineering innovation with measurable optimization.
+- **SDG 13**: provides visibility into estimated carbon impact of code execution.
