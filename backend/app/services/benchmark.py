@@ -35,6 +35,17 @@ ALLOWED_NODES = {
     ast.Attribute,
     ast.Subscript,
     ast.Slice,
+    ast.keyword,
+    ast.Load,
+    ast.Store,
+    ast.Del,
+    ast.UnaryOp,
+    ast.USub,
+    ast.UAdd,
+    ast.Not,
+    ast.Invert,
+    ast.NamedExpr,
+    ast.Index,
     ast.ListComp,
     ast.DictComp,
     ast.SetComp,
@@ -111,6 +122,10 @@ def _benchmark_worker(code: str, iterations: int, queue: multiprocessing.Queue) 
         "set": set,
         "tuple": tuple,
         "abs": abs,
+        "str": str,
+        "int": int,
+        "float": float,
+        "bool": bool,
     }
     namespace = {"__builtins__": safe_builtins}
 

@@ -2,7 +2,8 @@ def calculate_green_score(findings: list, benchmark: dict | None = None) -> tupl
     severity_penalty = {"low": 4, "medium": 8, "high": 14}
     score = 100
     for finding in findings:
-        score -= severity_penalty.get(finding.severity, 5)
+        severity = finding.get("severity") if isinstance(finding, dict) else finding.severity
+        score -= severity_penalty.get(severity, 5)
 
     rationale = ["Base score 100 minus penalties from findings."]
     if benchmark:

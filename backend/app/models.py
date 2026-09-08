@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
@@ -30,10 +32,10 @@ class Analysis(Base):
 
     project: Mapped[Project] = relationship("Project", back_populates="analyses")
     findings: Mapped[list["Finding"]] = relationship("Finding", back_populates="analysis", cascade="all, delete-orphan")
-    optimization: Mapped["Optimization" | None] = relationship("Optimization", back_populates="analysis", uselist=False, cascade="all, delete-orphan")
+    optimization: Mapped[Optimization | None] = relationship("Optimization", back_populates="analysis", uselist=False, cascade="all, delete-orphan")
     benchmarks: Mapped[list["Benchmark"]] = relationship("Benchmark", back_populates="analysis", cascade="all, delete-orphan")
     sustainability_metrics: Mapped[list["SustainabilityMetric"]] = relationship("SustainabilityMetric", back_populates="analysis", cascade="all, delete-orphan")
-    green_score: Mapped["GreenScore" | None] = relationship("GreenScore", back_populates="analysis", uselist=False, cascade="all, delete-orphan")
+    green_score: Mapped[GreenScore | None] = relationship("GreenScore", back_populates="analysis", uselist=False, cascade="all, delete-orphan")
 
 
 class Finding(Base):

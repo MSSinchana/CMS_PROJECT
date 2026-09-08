@@ -1,4 +1,5 @@
 import textwrap
+import json
 
 import httpx
 
@@ -55,7 +56,13 @@ async def generate_optimization(code: str, findings: list[dict]) -> tuple[str, s
             content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
             if not content:
                 raise ValueError("Empty LLM response")
-            return "AI optimization generated.", content, "ai"
+            try:
+                parsed = json.loads(content)
+                explanation = parsed.get("explanation", "AI optimization generated.")
+                optimized = parsed.get("optimized_code", code)
+                return explanation, optimized, "ai"
+            except Exception:
+                return "AI optimization generated.", content, "ai"
     except Exception:
         explanation = (
             "AI optimization request failed, so rule-based recommendations are provided. "

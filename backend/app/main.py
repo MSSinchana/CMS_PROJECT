@@ -83,8 +83,14 @@ def analyze_code(payload: AnalyzeRequest, db: Session = Depends(get_db)) -> Anal
     for finding_data in finding_dicts:
         db.add(Finding(analysis_id=analysis.id, **finding_data))
 
-    score, rationale = calculate_green_score([])
-    db.add(GreenScore(analysis_id=analysis.id, score=score if parse_ok else 0, rationale=rationale if parse_ok else summary))
+    score, rationale = calculate_green_score(finding_dicts if parse_ok else [])
+    db.add(
+        GreenScore(
+            analysis_id=analysis.id,
+            score=score if parse_ok else 0,
+            rationale=rationale if parse_ok else summary,
+        )
+    )
     db.commit()
     db.refresh(analysis)
 
