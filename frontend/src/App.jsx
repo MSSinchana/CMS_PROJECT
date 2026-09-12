@@ -1,44 +1,53 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import PrivateRoute from './components/PrivateRoute.jsx';
-import AdminRoute from './components/AdminRoute.jsx';
-import AppShell from './components/AppShell.jsx';
-import HomePage from './pages/HomePage.jsx';
-import LoginPage from './pages/LoginPage.jsx';
-import RegisterPage from './pages/RegisterPage.jsx';
-import ProfilePage from './pages/ProfilePage.jsx';
-import BlogFeedPage from './pages/BlogFeedPage.jsx';
-import BlogDetailPage from './pages/BlogDetailPage.jsx';
-import AdminDashboard from './pages/AdminDashboard.jsx';
-import UserDashboard from './pages/UserDashboard.jsx';
-import ContentListPage from './pages/ContentListPage.jsx';
-import AddContentPage from './pages/AddContentPage.jsx';
-import EditContentPage from './pages/EditContentPage.jsx';
-import UsersPage from './pages/UsersPage.jsx';
-import ActivityLogPage from './pages/ActivityLogPage.jsx';
+import { useMemo, useState } from 'react';
+import Layout from './components/Layout';
+import AnalyzePage from './pages/AnalyzePage';
+import BenchmarkPage from './pages/BenchmarkPage';
+import DashboardPage from './pages/DashboardPage';
+import HistoryPage from './pages/HistoryPage';
+import LandingPage from './pages/LandingPage';
+import OptimizationPage from './pages/OptimizationPage';
+import ProjectsPage from './pages/ProjectsPage';
+import ResultsPage from './pages/ResultsPage';
+import SettingsPage from './pages/SettingsPage';
 
 export default function App() {
+  const [projects, setProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [optimizationResult, setOptimizationResult] = useState(null);
+  const [benchmarkResult, setBenchmarkResult] = useState(null);
+
+  const sharedProps = useMemo(
+    () => ({
+      selectedProjectId,
+      setSelectedProjectId,
+      projects,
+      setProjects,
+      analysisResult,
+      setAnalysisResult,
+      optimizationResult,
+      setOptimizationResult,
+      benchmarkResult,
+      setBenchmarkResult,
+    }),
+    [selectedProjectId, projects, analysisResult, optimizationResult, benchmarkResult],
+  );
+
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/blogs" element={<BlogFeedPage />} />
-      <Route path="/blogs/:id" element={<BlogDetailPage />} />
-
-      <Route element={<PrivateRoute />}>
-        <Route element={<AppShell />}>
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-          <Route path="/user" element={<UserDashboard />} />
-          <Route path="/content" element={<ContentListPage />} />
-          <Route path="/content/new" element={<AddContentPage />} />
-          <Route path="/content/:id/edit" element={<EditContentPage />} />
-          <Route path="/users" element={<AdminRoute><UsersPage /></AdminRoute>} />
-          <Route path="/activity" element={<AdminRoute><ActivityLogPage /></AdminRoute>} />
-        </Route>
-      </Route>
-
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <Layout>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/dashboard" element={<DashboardPage {...sharedProps} />} />
+        <Route path="/analyze" element={<AnalyzePage {...sharedProps} />} />
+        <Route path="/results" element={<ResultsPage {...sharedProps} />} />
+        <Route path="/optimization" element={<OptimizationPage {...sharedProps} />} />
+        <Route path="/benchmark" element={<BenchmarkPage {...sharedProps} />} />
+        <Route path="/history" element={<HistoryPage {...sharedProps} />} />
+        <Route path="/projects" element={<ProjectsPage {...sharedProps} />} />
+        <Route path="/settings" element={<SettingsPage {...sharedProps} />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Layout>
   );
 }
